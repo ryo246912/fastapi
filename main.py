@@ -11,6 +11,16 @@ class Item(BaseModel):
     description: Union[str, None] = None
     tax: Union[float, None] = None
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Foo",
+                "description": "A very nice Item2",
+                "price": 35.4,
+                "tax": 3.2,
+            }
+        }
+
 class User(BaseModel):
     username: str
     full_name: Union[str, None] = None
@@ -51,12 +61,11 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
 @app.get("/items/{item_id}")
 async def read_item(
     item: Item,
-    user: User,
     item_id: int = Path(title="The ID of the item to get", ge=1),
     q: Union[str, None] = Query(default=None, alias="item-query"), 
     short: bool = False,
 ):
-    i = {"item_id": item_id,"item": item,"user": user}
+    i = {"item_id": item_id,"item": item}
     if q:
         i.update({"q": q})
     if not short:
@@ -66,8 +75,8 @@ async def read_item(
     return i
 
 @app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    return {"item_name": item.name, "item_id": item_id}
+def update_item(item_id: int, item: Item, user: User):
+    return {"item_name": item.name,"user_name": user.username, "item_id": item_id}
 
 
 @app.post("/items/")
