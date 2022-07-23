@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Query, Path, Body,Cookie,Header
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from enum import Enum
 from typing import Union, List
 
@@ -9,7 +9,8 @@ class Item(BaseModel):
     name: str
     price: float
     description: Union[str, None] = None
-    tax: Union[float, None] = None
+    tax: float = 10.5
+    tags: List[str] = []
 
     class Config:
         schema_extra = {
@@ -18,6 +19,7 @@ class Item(BaseModel):
                 "description": "A very nice Item2",
                 "price": 35.4,
                 "tax": 3.2,
+                "tags":["test"],
             }
         }
 
@@ -33,11 +35,21 @@ class User(BaseModel):
             }
         }
 
-
 class ModelName(str, Enum):
     alexnet = "alexnet"
     resnet = "resnet"
     lenet = "lenet"
+
+class UserIn(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+    full_name: Union[str, None] = None
+
+class UserOut(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: Union[str, None] = None
 
 @app.get("/")
 def read_root():
@@ -70,14 +82,17 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
         results.update({"r": r})
     return results
 
+@app.post("/items/",response_model=Item)
+async def create_item(item: Item):
+    return item
+
 @app.get("/items/{item_id}")
 async def read_item(
-    item: Item,
     item_id: int = Path(title="The ID of the item to get", ge=1),
     q: Union[str, None] = Query(default=None, alias="item-query"), 
-    short: bool = False,
+    short: bool = False
 ):
-    i = {"item_id": item_id,"item": item}
+    i = {"item_id": item_id,"items":items[item_id]}
     if q:
         i.update({"q": q})
     if not short:
@@ -85,6 +100,35 @@ async def read_item(
             {"description": "This is an amazing item that has a long description"}
         )
     return i
+
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The bartenders", "price": 62, "tax": 20.2},
+    "baz": {"name": "Baz", "description": None, "price": 50.2, "tax": 10.5, "tags": []},
+    "baz2": {
+        "name": "Baz2",
+        "description": "There goes my baz",
+        "price": 50.2,
+        "tax": 10.5,
+    },
+}
+
+@app.get("/items2/{item_id}", response_model=Item, response_model_exclude_unset=True)
+async def read_item(item_id: str):
+    return items[item_id]
+
+@app.get(
+    "/items/{item_id}/name",
+    response_model=Item,
+    response_model_include={"name", "description"}, # includeはkeyを一部に
+)
+async def read_item_name(item_id: str):
+    return items[item_id]
+
+
+@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude={"tax"}) # excludeはkeyを除く
+async def read_item_public_data(item_id: str):
+    return items[item_id]
 
 @app.put("/items/{item_id}")
 def update_item(
@@ -189,3 +233,7 @@ async def get_model(model_name: ModelName):
     return {"model_name": model_name, "message": "Have some residuals"}
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
+@app.post("/user/", response_model=UserOut)
+async def create_user(user: UserIn):
+    return user
