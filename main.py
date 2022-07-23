@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path, Body,Cookie,Header,status,Form
+from fastapi import FastAPI, Query, Path, Body,Cookie,Header,status,Form,File,UploadFile
 from pydantic import BaseModel, EmailStr
 from enum import Enum
 from typing import Union, List
@@ -297,3 +297,23 @@ async def read_items():
 @app.post("/login/")
 async def login(username: str = Form(), password: str = Form()):
     return {"username": username}
+
+
+
+@app.post("/files/")
+# async def create_file(file: bytes = File()):
+async def create_file(file: Union[bytes, None] = File(default=None)):
+    if not file:
+        return {"message": "No file sent"}
+    else:
+        return {"file_size": len(file)}
+
+
+@app.post("/uploadfile/")
+# async def create_upload_file(file: UploadFile):
+# UploadFileの型推定を入れることで、デフォルト値を設定しなくてもいい
+async def create_upload_file(file: Union[UploadFile, None] = File(description="A file read as UploadFile")):
+    if not file:
+        return {"message": "No upload file sent"}
+    else:
+        return {"filename": file.filename}
