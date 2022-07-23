@@ -11,6 +11,9 @@ class Item(BaseModel):
     description: Union[str, None] = None
     tax: Union[float, None] = None
 
+class User(BaseModel):
+    username: str
+    full_name: Union[str, None] = None
 
 class ModelName(str, Enum):
     alexnet = "alexnet"
@@ -47,18 +50,20 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
 
 @app.get("/items/{item_id}")
 async def read_item(
+    item: Item,
+    user: User,
     item_id: int = Path(title="The ID of the item to get", ge=1),
     q: Union[str, None] = Query(default=None, alias="item-query"), 
-    short: bool = False
+    short: bool = False,
 ):
-    item = {"item_id": item_id}
+    i = {"item_id": item_id,"item": item,"user": user}
     if q:
-        item.update({"q": q})
+        i.update({"q": q})
     if not short:
-        item.update(
+        i.update(
             {"description": "This is an amazing item that has a long description"}
         )
-    return item
+    return i
 
 @app.put("/items/{item_id}")
 def update_item(item_id: int, item: Item):
