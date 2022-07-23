@@ -1,0 +1,30 @@
+version: '3'
+services:
+  db:
+    container_name: postgresql
+    image: postgres:11.2
+    volumes:
+      - django_data_volume:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    env_file:
+      - ./.env
+  backend:
+    container_name: fastapi
+    build:
+      # context: ../ #docker-compose.ymlの親ディレクトリをディレクトリにする→Dockerfileでspace-backendをCOPYできる
+      context: ./
+      dockerfile: dockerfilePython #.contextから見たDockerfileの場所
+    volumes:
+      # - ../space-backend:/code #docker-compose.ymlを位置から見て指定
+      - .:/code
+    # command: pip install fastapi[all] && uvicorn main:app --reload --port 8000 --host 0.0.0.0
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    security_opt:
+      - seccomp:unconfined #開発時のパフォーマンス改善
+    tty: true
+volumes:
+  django_data_volume:
