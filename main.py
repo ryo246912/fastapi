@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path
+from fastapi import FastAPI, Query, Path, Body
 from pydantic import BaseModel
 from enum import Enum
 from typing import Union, List
@@ -24,6 +24,15 @@ class Item(BaseModel):
 class User(BaseModel):
     username: str
     full_name: Union[str, None] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "username": "Test",
+                "full_name": "testname",
+            }
+        }
+
 
 class ModelName(str, Enum):
     alexnet = "alexnet"
@@ -75,8 +84,87 @@ async def read_item(
     return i
 
 @app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item, user: User):
-    return {"item_name": item.name,"user_name": user.username, "item_id": item_id}
+def update_item(
+        item_id: int, 
+        item: Item = Body(
+            examples={
+                "normal": {
+                    "summary": "A normal example",
+                    "description": "A **normal** item works correctly.",
+                    "value": {
+                        "name": "Foo",
+                        "description": "A very nice Item",
+                        "price": 35.4,
+                        "tax": 3.2,
+                    },
+                },
+                "converted": {
+                    "summary": "An example with converted data",
+                    "description": "FastAPI can convert price `strings` to actual `numbers` automatically",
+                    "value": {
+                        "name": "Bar",
+                        "price": "35.4",
+                    },
+                },
+                "invalid": {
+                    "summary": "Invalid data is rejected with an error",
+                    "value": {
+                        "name": "Baz",
+                        "price": "thirty five point four",
+                    },
+                },
+            },
+        )
+    ):
+    return {"item_name": item.name, "item_id": item_id}
+
+#FIXME 複数のパラメータにBodyを渡した際に、Docに効かない
+@app.put("/items/{item_id2}")
+def update_item2(
+        item_id2: int, 
+        user: User = Body(
+            examples={
+                "normal": {
+                    "summary": "A normal example",
+                    "description": "A **normal** item works correctly.",
+                    "value": {
+                        "username": "Test",
+                        "full_name": "testname",
+                    },
+                },
+            }
+        ),
+        item: Item = Body(
+            examples={
+                "normal": {
+                    "summary": "A normal example",
+                    "description": "A **normal** item works correctly.",
+                    "value": {
+                        "name": "Foo",
+                        "description": "A very nice Item",
+                        "price": 35.4,
+                        "tax": 3.2,
+                    },
+                },
+                "converted": {
+                    "summary": "An example with converted data",
+                    "description": "FastAPI can convert price `strings` to actual `numbers` automatically",
+                    "value": {
+                        "name": "Bar",
+                        "price": "35.4",
+                    },
+                },
+                "invalid": {
+                    "summary": "Invalid data is rejected with an error",
+                    "value": {
+                        "name": "Baz",
+                        "price": "thirty five point four",
+                    },
+                },
+            },
+        )
+    ):
+    return {"item_name": item.name,"user_name": user.username, "item_id": item_id2}
 
 
 @app.post("/items/")
