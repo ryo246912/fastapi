@@ -8,7 +8,6 @@ app = FastAPI()
 class Item(BaseModel):
     name: str
     price: float
-    is_offer: bool = None
     description: Union[str, None] = None
     tax: Union[float, None] = None
 
@@ -44,7 +43,11 @@ def update_item(item_id: int, item: Item):
 
 @app.post("/items/")
 async def create_item(item: Item):
-    return item
+    item_dict = item.dict()
+    if item.tax:
+        price_with_tax = item.price + item.tax
+        item_dict.update({"price_with_tax": price_with_tax})
+    return item_dict
 
 @app.get("/models/{model_name}")
 async def get_model(model_name: ModelName):
