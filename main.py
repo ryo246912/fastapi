@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path, Body
+from fastapi import FastAPI, Query, Path, Body,Cookie
 from pydantic import BaseModel
 from enum import Enum
 from typing import Union, List
@@ -59,8 +59,10 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
         description="Query string for the items to search in the database that have a good match",
         min_length=3,
         # deprecated=True,
-    )):
-    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
+    ),
+    ads_id: Union[str, None] = Cookie(default=None)
+):
+    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}],"ads_id": ads_id}
     if q:
         results.update({"q": q})
     if r:
