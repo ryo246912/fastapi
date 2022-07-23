@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path, Body,Cookie
+from fastapi import FastAPI, Query, Path, Body,Cookie,Header
 from pydantic import BaseModel
 from enum import Enum
 from typing import Union, List
@@ -60,9 +60,10 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
         min_length=3,
         # deprecated=True,
     ),
-    ads_id: Union[str, None] = Cookie(default=None)
+    ads_id: Union[str, None] = Cookie(default=None),
+    user_agent: Union[str, None] = Header(default=None)
 ):
-    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}],"ads_id": ads_id}
+    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}],"ads_id": ads_id,"User-Agent": user_agent}
     if q:
         results.update({"q": q})
     if r:
