@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path, Body,Cookie,Header,status
+from fastapi import FastAPI, Query, Path, Body,Cookie,Header,status,Form
 from pydantic import BaseModel, EmailStr
 from enum import Enum
 from typing import Union, List
@@ -292,3 +292,8 @@ items2 = [
 @app.get("/items2/", response_model=List[Item2])
 async def read_items():
     return items2
+
+#MEMO DRFだとFormの受取はどう書く？
+@app.post("/login/")
+async def login(username: str = Form(), password: str = Form()):
+    return {"username": username}
