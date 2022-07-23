@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query, Path, Body,Cookie,Header
+from fastapi import FastAPI, Query, Path, Body,Cookie,Header,status
 from pydantic import BaseModel, EmailStr
 from enum import Enum
 from typing import Union, List
@@ -100,7 +100,7 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
         results.update({"r": r})
     return results
 
-@app.post("/items/",response_model=Item)
+@app.post("/items/",response_model=Item, status_code=status.HTTP_201_CREATED)
 async def create_item(item: Item):
     return item
 
