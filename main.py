@@ -5,17 +5,17 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr,Field
 from enum import Enum
 from typing import Union, List
 
 app = FastAPI()
 
 class Item(BaseModel):
-    name: str
-    price: float
-    description: Union[str, None] = None
-    tax: float = 10.5
+    name: str = Field(example="Foo2")
+    description: Union[str, None] = Field(default=None, example="A very nice Item22")
+    price: float = Field(example=35.42)
+    tax: Union[float, None] = Field(default=None, example=3.22)
     tags: List[str] = []
 
     class Config:
@@ -116,7 +116,15 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
     return results
 
 @app.post("/items/",response_model=Item, status_code=status.HTTP_201_CREATED)
-async def create_item(item: Item):
+async def create_item(item: Item = Body(
+        example={
+            "name": "Foo3",
+            "description": "A very nice Item3",
+            "price": 35.43,
+            "tax": 3.23,
+        },
+    ),
+):
     return item
 
 @app.get("/items/{item_id}")
