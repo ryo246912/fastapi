@@ -160,7 +160,7 @@ def read_root():
     - **tax**: if the item doesn't have tax, you can omit this
     - **tags**: a set of unique tag strings for this item
     """
-    return {"Hello": "World"}
+    return {"msg": "Hello World"}
 
 # @app.get("/items/{item_id}")
 # def read_item(item_id: int, q: str = None):
