@@ -121,6 +121,11 @@ class ModelName(str, Enum):
     resnet = "resnet"
     lenet = "lenet"
 
+
+class Tags(Enum):
+    items = "items"
+    users = "users"
+
 class UserBase(BaseModel):
     username: str
     email: EmailStr
@@ -146,6 +151,15 @@ async def validation_exception_handler(request, exc):
 
 @app.get("/")
 def read_root():
+    """
+    Create an item with all the information:
+
+    - **name**: each item must have a name
+    - **description**: a long description
+    - **price**: required
+    - **tax**: if the item doesn't have tax, you can omit this
+    - **tags**: a set of unique tag strings for this item
+    """
     return {"Hello": "World"}
 
 # @app.get("/items/{item_id}")
@@ -156,7 +170,13 @@ def read_root():
 # async def read_item(skip: int = 0, limit: int = 10):
 #     return fake_items_db[skip : skip + limit]
 
-@app.get("/items/",tags=["items"])
+@app.get(
+    "/items/",
+    tags=[Tags.items],    
+    summary="Get an itemだよ～",
+    description="Get an item with all the information, name, description, price, tax and a set of unique tags",
+    response_description="The gotten item!",
+)
 async def read_items(q: Union[List[str], None] = Query(default=None),
     r: Union[str, None] = Query(
         default=None,
@@ -179,7 +199,9 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
     "/items/",
     response_model=Item, 
     status_code=status.HTTP_201_CREATED,
-    tags=["items"]
+    summary="Create an item!",
+    response_description="The created item!",
+    tags=[Tags.items]
 )
 async def create_item(item: Item = Body(
         example={
@@ -190,9 +212,18 @@ async def create_item(item: Item = Body(
         },
     ),
 ):
+    """
+    Create an item with all the information:
+
+    - **name**: each item must have a name
+    - **description**: a long description
+    - **price**: required
+    - **tax**: if the item doesn't have tax, you can omit this
+    - **tags**: a set of unique tag strings for this item
+    """
     return item
 
-@app.get("/items/{item_id}",tags=["items"])
+@app.get("/items/{item_id}",tags=[Tags.items])
 async def read_item(
     item_id: int = Path(title="The ID of the item to get", ge=1),
     q: Union[str, None] = Query(default=None, alias="item-query"), 
@@ -226,7 +257,7 @@ items = {
     "/items2/{item_id}", 
     response_model=Item, 
     response_model_exclude_unset=True,
-    tags=["items"]
+    tags=[Tags.items]
 )
 async def read_item(item_id: str):
     if item_id not in items:
@@ -241,7 +272,7 @@ async def read_item(item_id: str):
     "/items/{item_id}/name",
     response_model=Item,
     response_model_include={"name", "description"}, # includeはkeyを一部に
-    tags=["items"]
+    tags=[Tags.items]
 )
 async def read_item_name(item_id: str):
     return items[item_id]
@@ -251,12 +282,12 @@ async def read_item_name(item_id: str):
     "/items/{item_id}/public", 
     response_model=Item, 
     response_model_exclude={"tax"},
-    tags=["items"],
+    tags=[Tags.items],
 ) # excludeはkeyを除く
 async def read_item_public_data(item_id: str):
     return items[item_id]
 
-@app.put("/items/{item_id}",tags=["items"])
+@app.put("/items/{item_id}",tags=[Tags.items])
 def update_item(
         item_id: int, 
         item: Item = Body(
@@ -292,7 +323,7 @@ def update_item(
     return {"item_name": item.name, "item_id": item_id}
 
 #FIXME 複数のパラメータにBodyを渡した際に、Docに効かない
-@app.put("/items/{item_id2}",tags=["items"])
+@app.put("/items/{item_id2}",tags=[Tags.items])
 def update_item2(
         item_id2: int, 
         user: User = Body(
@@ -340,7 +371,7 @@ def update_item2(
     return {"item_name": item.name,"user_name": user.username, "item_id": item_id2}
 
 
-@app.post("/items/",tags=["items"])
+@app.post("/items/",tags=[Tags.items])
 async def create_item(item: Item):
     item_dict = item.dict()
     if item.tax:
@@ -374,7 +405,7 @@ def fake_save_user(user_in: UserIn):
 @app.post(
     "/user/", 
     response_model=UserOut,
-    tags=["users"],
+    tags=[Tags.users],
 )
 async def create_user(user_in: UserIn):
     user_saved = fake_save_user(user_in)
@@ -393,7 +424,7 @@ items3 = {
 @app.get(
     "/items3/{item_id}", 
     response_model=Union[PlaneItem, CarItem],
-    tags=["items"],
+    tags=[Tags.items],
 )
 async def read_item(item_id: str):
     return items3[item_id]
@@ -408,7 +439,7 @@ items2 = [
 @app.get(
     "/items2/", 
     response_model=List[Item2],
-    tags=["items"],
+    tags=[Tags.items],
 )
 async def read_items():
     return items2
