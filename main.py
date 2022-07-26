@@ -195,6 +195,9 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
         results.update({"r": r})
     return results
 
+#FIXME summary・response_descriptionが効いていないので確認
+#FIXME docstring効いていないので確認
+#FIXME Bodyのexampleが効いていないので確認(BaseModelのスキーマの方が優先される？)
 @app.post(
     "/items/",
     response_model=Item, 
