@@ -9,7 +9,54 @@ from pydantic import BaseModel, EmailStr,Field
 from enum import Enum
 from typing import Union, List
 
-app = FastAPI()
+
+description = """
+ChimichangApp API helps you do awesome stuff. 🚀
+
+## Items
+
+You can **read items**.
+
+## Users
+
+You will be able to:
+
+* **Create users** (_not implemented_).
+* **Read users** (_not implemented_).
+"""
+
+tags_metadata = [
+    {
+        "name": "users",
+        "description": "Operations with users. The **login** logic is also here.",
+    },
+    {
+        "name": "items",
+        "description": "Manage items. So _fancy_ they have their own docs.",
+        "externalDocs": {
+            "description": "Items external docs",
+            "url": "https://fastapi.tiangolo.com/",
+        },
+    },
+]
+
+app = FastAPI(
+    title="ChimichangApp",
+    description=description,
+    version="0.0.1",
+    terms_of_service="http://example.com/terms/",
+    contact={
+        "name": "Deadpoolio the Amazing",
+        "url": "http://x-force.example.com/contact/",
+        "email": "dp@x-force.example.com",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+    openapi_tags=tags_metadata,
+    openapi_url="/api/v1/openapi.json"
+)
 
 class Item(BaseModel):
     name: str = Field(example="Foo2")
@@ -96,7 +143,7 @@ def read_root():
 # async def read_item(skip: int = 0, limit: int = 10):
 #     return fake_items_db[skip : skip + limit]
 
-@app.get("/items/")
+@app.get("/items/",tags=["items"])
 async def read_items(q: Union[List[str], None] = Query(default=None),
     r: Union[str, None] = Query(
         default=None,
@@ -115,7 +162,12 @@ async def read_items(q: Union[List[str], None] = Query(default=None),
         results.update({"r": r})
     return results
 
-@app.post("/items/",response_model=Item, status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/items/",
+    response_model=Item, 
+    status_code=status.HTTP_201_CREATED,
+    tags=["items"]
+)
 async def create_item(item: Item = Body(
         example={
             "name": "Foo3",
@@ -127,7 +179,7 @@ async def create_item(item: Item = Body(
 ):
     return item
 
-@app.get("/items/{item_id}")
+@app.get("/items/{item_id}",tags=["items"])
 async def read_item(
     item_id: int = Path(title="The ID of the item to get", ge=1),
     q: Union[str, None] = Query(default=None, alias="item-query"), 
@@ -157,7 +209,12 @@ items = {
     },
 }
 
-@app.get("/items2/{item_id}", response_model=Item, response_model_exclude_unset=True)
+@app.get(
+    "/items2/{item_id}", 
+    response_model=Item, 
+    response_model_exclude_unset=True,
+    tags=["items"]
+)
 async def read_item(item_id: str):
     if item_id not in items:
         raise HTTPException(
@@ -171,16 +228,22 @@ async def read_item(item_id: str):
     "/items/{item_id}/name",
     response_model=Item,
     response_model_include={"name", "description"}, # includeはkeyを一部に
+    tags=["items"]
 )
 async def read_item_name(item_id: str):
     return items[item_id]
 
 
-@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude={"tax"}) # excludeはkeyを除く
+@app.get(
+    "/items/{item_id}/public", 
+    response_model=Item, 
+    response_model_exclude={"tax"},
+    tags=["items"],
+) # excludeはkeyを除く
 async def read_item_public_data(item_id: str):
     return items[item_id]
 
-@app.put("/items/{item_id}")
+@app.put("/items/{item_id}",tags=["items"])
 def update_item(
         item_id: int, 
         item: Item = Body(
@@ -216,7 +279,7 @@ def update_item(
     return {"item_name": item.name, "item_id": item_id}
 
 #FIXME 複数のパラメータにBodyを渡した際に、Docに効かない
-@app.put("/items/{item_id2}")
+@app.put("/items/{item_id2}",tags=["items"])
 def update_item2(
         item_id2: int, 
         user: User = Body(
@@ -264,7 +327,7 @@ def update_item2(
     return {"item_name": item.name,"user_name": user.username, "item_id": item_id2}
 
 
-@app.post("/items/")
+@app.post("/items/",tags=["items"])
 async def create_item(item: Item):
     item_dict = item.dict()
     if item.tax:
@@ -295,7 +358,11 @@ def fake_save_user(user_in: UserIn):
     return user_in_db
 
 
-@app.post("/user/", response_model=UserOut)
+@app.post(
+    "/user/", 
+    response_model=UserOut,
+    tags=["users"],
+)
 async def create_user(user_in: UserIn):
     user_saved = fake_save_user(user_in)
     return user_saved
@@ -310,7 +377,11 @@ items3 = {
     },
 }
 
-@app.get("/items3/{item_id}", response_model=Union[PlaneItem, CarItem])
+@app.get(
+    "/items3/{item_id}", 
+    response_model=Union[PlaneItem, CarItem],
+    tags=["items"],
+)
 async def read_item(item_id: str):
     return items3[item_id]
 
@@ -321,7 +392,11 @@ items2 = [
 ]
 
 
-@app.get("/items2/", response_model=List[Item2])
+@app.get(
+    "/items2/", 
+    response_model=List[Item2],
+    tags=["items"],
+)
 async def read_items():
     return items2
 
