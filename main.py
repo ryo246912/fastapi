@@ -1,6 +1,19 @@
 from fastapi import (
-    FastAPI,Query, Path, Body,Cookie,Header,status,Form,File,UploadFile,HTTPException,Request
-    )
+    FastAPI,
+    Query, 
+    Path, 
+    Body,
+    Cookie,
+    Header,
+    status,
+    Form,
+    File,
+    UploadFile,
+    HTTPException,
+    Request,
+    BackgroundTasks,
+    Depends,
+)
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
@@ -442,3 +455,28 @@ async def read_unicorn(name: str):
     if name == "yolo":
         raise UnicornException(name=name)
     return {"unicorn_name": name}
+
+def write_notification(email: str, message=""):
+    with open("log.txt", mode="a+") as email_file:
+        content = f"notification for {email}: {message}\n"
+        email_file.write(content)
+
+# @app.post("/send-notification/{email}")
+# async def send_notification(email: str, background_tasks: BackgroundTasks):
+#     background_tasks.add_task(write_notification, email, message="some notification")
+#     return {"message": "Notification sent in the background"}
+
+def get_query(background_tasks: BackgroundTasks, q: Union[str, None] = None):
+    if q:
+        message = f"found query: {q}"
+        email="a"
+        background_tasks.add_task(write_notification,email, message)
+    return q
+
+@app.post("/send-notification/{email}")
+async def send_notification(
+    email: str, background_tasks: BackgroundTasks, q: str = Depends(get_query)
+):
+    message = f"message to {email}"
+    background_tasks.add_task(write_notification,email, message)
+    return {"message": "Message sent"}
