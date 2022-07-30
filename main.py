@@ -22,6 +22,7 @@ from pydantic import BaseModel, EmailStr,Field
 from enum import Enum
 from typing import Union, List
 
+from sql_app.database import engine
 
 description = """
 ChimichangApp API helps you do awesome stuff. 🚀
@@ -160,6 +161,12 @@ def read_root():
     - **tax**: if the item doesn't have tax, you can omit this
     - **tags**: a set of unique tag strings for this item
     """
+
+    result = engine.execute("select * from users_user")    
+
+    for row in result:
+        print(row.username)
+
     return {"msg": "Hello World"}
 
 # @app.get("/items/{item_id}")
