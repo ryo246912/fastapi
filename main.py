@@ -13,7 +13,7 @@ from fastapi import (
     Request,
     BackgroundTasks,
     Depends,
-)
+) 
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import PlainTextResponse
@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Union, List
 
 from sql_app.database import engine
+from pypika import Query as query
 
 description = """
 ChimichangApp API helps you do awesome stuff. 🚀
@@ -162,10 +163,13 @@ def read_root():
     - **tags**: a set of unique tag strings for this item
     """
 
-    result = engine.execute("select * from users_user")    
+    q = query.from_('users_user').select('username', 'email', 'date_joined')
+    result = engine.execute(q.get_sql())
+    # result = engine.execute("select * from users_user")
+    print(result.keys())
 
-    for row in result:
-        print(row.username)
+    # for row in result:
+    #     print(row.username)
 
     return {"msg": "Hello World"}
 
